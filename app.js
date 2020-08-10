@@ -2,6 +2,7 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const _ = require("lodash");
 const ejs = require("ejs");
 
 const homeStartingContent =
@@ -12,6 +13,7 @@ const contactContent =
   "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
 
 const app = express();
+let posts = [];
 
 app.set("view engine", "ejs");
 
@@ -19,7 +21,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/", function (req, res) {
-  res.render("home", { startingContent: homeStartingContent });
+  res.render("home", {
+    startingContent: homeStartingContent,
+    posts: posts,
+  });
 });
 
 app.get("/about", function (req, res) {
@@ -34,14 +39,26 @@ app.get("/compose", function (req, res) {
   res.render("compose");
 });
 
+app.get("/posts/:postTitle", function (req, res) {
+  const requestedTitle = _.lowerCase(req.params.postTitle);
+
+  posts.forEach(function (post) {
+    const storedTitle = _.lowerCase(post.title);
+    if (requestedTitle === storedTitle) {
+      res.render("post", { post: post });
+    } else {
+      console.log("Nope");
+    }
+  });
+});
+
 app.post("/compose", function (req, res) {
-  let postTitle = req.body.postTitle;
-  let postBody = req.body.postBody;
-  let postContent = {
-    title: postTitle,
-    contern: postBody,
+  const post = {
+    title: req.body.postTitle,
+    content: req.body.postBody,
   };
-  console.log(postContent);
+  posts.push(post);
+  res.redirect("/");
 });
 
 app.listen(3000, function () {
